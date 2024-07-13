@@ -1,6 +1,5 @@
 #include "otsu_threshold.h"
-#include <iostream>
-#include <cmath>
+
 
 int otsu_method(cv::Mat img){
     double histogram[256];

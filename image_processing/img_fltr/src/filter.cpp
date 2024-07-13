@@ -1,8 +1,11 @@
 #include "filter.h"
 
+
 cv::Mat filter(cv::Mat src, cv::Mat kernel){
+    if (src.channels() != 3){
+        throw std::invalid_argument("Different from 3 number of channels is not supported.");
+    }
     src.convertTo(src, CV_64FC3);
-    
     cv::Mat img_conv(src.rows + kernel.rows - 1, src.cols + kernel.cols - 1, CV_64FC3, CV_RGB(0, 0, 0));
     for (int i = 0; i < src.rows; i++) {
         for (int j = 0; j < src.cols; j++) {
