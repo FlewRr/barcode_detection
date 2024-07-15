@@ -9,4 +9,4 @@ add_subdirectory(image_processing)
 
 
 add_executable(main main.cpp )
-target_link_libraries(main ${OpenCV_LIBS} img_fltr otsu gradient)
+target_link_libraries(main ${OpenCV_LIBS} img_fltr otsu gradient hough)

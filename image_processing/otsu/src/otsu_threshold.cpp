@@ -7,13 +7,15 @@ int otsu_method(cv::Mat img){
 
    for (int i = 0; i < img.rows; ++i){
         for (int j = 0; j < img.cols; ++j){
-            histogram[img.at<uchar>(j, i)] += 1;
+            histogram[img.at<uchar>(i, j)] += 1;
         }
     }
 
-    for (int i = 0; i < 256; ++i)
+    for (int i = 0; i < 256; ++i){
+        if (std::isnan(histogram[i]))
+            histogram[i] = 0;
         histogram[i] /= total_pixels;
-
+    }
     double probs[256], mean[256];
     double max_between, between[256];
     int threshold;
