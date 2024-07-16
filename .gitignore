@@ -36,3 +36,6 @@
 /images
 /build
 /processed_images
+/.vscode
+/Markup
+/Image

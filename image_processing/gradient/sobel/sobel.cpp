@@ -25,7 +25,9 @@ double compute_filter(cv::Mat src, cv::Mat kernel, int x, int y){
 
 
 cv::Mat sobel(cv::Mat src){
-    cv::cvtColor(src, src, cv::COLOR_BGR2GRAY);
+    if (src.channels() == 3)
+        cv::cvtColor(src, src, cv::COLOR_BGR2GRAY);
+    
     src.convertTo(src, CV_8U);
     cv::Mat sobel_x, sobel_y;
     

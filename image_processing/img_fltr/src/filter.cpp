@@ -3,7 +3,7 @@
 
 cv::Mat filter(cv::Mat src, cv::Mat kernel){
     if (src.channels() != 3){
-        throw std::invalid_argument("Different from 3 number of channels is not supported.");
+        throw std::invalid_argument("Number of channels different from 3 are not supported.");
     }
     src.convertTo(src, CV_64FC3);
     cv::Mat img_conv(src.rows + kernel.rows - 1, src.cols + kernel.cols - 1, CV_64FC3, CV_RGB(0, 0, 0));
