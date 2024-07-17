@@ -12,15 +12,19 @@
 #include <filesystem>
 #include <vector>
 
-int main(){
-    std::vector<std::string> files;
+int main(int argc, char* argv[]){
+    std::vector<std::string> files; 
 
-    std::string path = "/home/sfleur/barcode_detection/barcode_detection/Image";
+    if (argc <= 2){
+        throw std::invalid_argument("Invalid parameters.");
+    }
+
+    std::string path(argv[1]);
     for (const auto & entry : std::filesystem::directory_iterator(path))
-        files.push_back(entry.path());    
+        files.push_back(entry.path());   
 
     for (int i = 0; i < 2; ++i){
-        std::string name = "/home/sfleur/barcode_detection/barcode_detection/processed_images/" + std::to_string(i) + ".jpg";
+        std::string name = argv[2] + std::string("/") + std::to_string(i) + ".jpg";
         cv::Mat A = cv::imread(cv::samples::findFile(files[i]));
         Detector detector;
         cv::Rect rect = detector.detect(files[i]);
