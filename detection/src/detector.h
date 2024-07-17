@@ -11,8 +11,7 @@ public:
     Detector() = default;
     ~Detector() = default;
 
-    // cv::Rect
-    std::vector<std::vector<cv::Point>> detect(std::string filename) const;
+    cv::Mat detect(std::string filename) const;
 };
 
 #endif

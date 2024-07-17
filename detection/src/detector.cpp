@@ -9,7 +9,6 @@ void Detector::preprocess(cv::Mat& img) const noexcept{
 
 void Detector::get_edge_map(cv::Mat& img) const{
     int thr = cv::threshold(img, img, 0, 255, cv::THRESH_BINARY + cv::THRESH_OTSU);
-    cv::imwrite("/home/sfleur/barcode_detection/barcode_detection/processed_images/thr.jpg", img);
     cv::medianBlur(img, img, 9);
 
     cv::Canny(img, img, thr/2, thr, 5);
@@ -21,7 +20,6 @@ void Detector::get_edge_map(cv::Mat& img) const{
 
     cv::Mat morph_element = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(4, 4));
     cv::morphologyEx(img, img, cv::MORPH_GRADIENT, morph_element);
-    cv::imwrite("/home/sfleur/barcode_detection/barcode_detection/processed_images/morph.jpg", img);
 }
 
 std::vector<std::vector<cv::Point>> Detector::get_contours(cv::Mat img) const{
@@ -37,9 +35,9 @@ std::vector<std::vector<cv::Point>> Detector::get_contours(cv::Mat img) const{
 
 }
 
-std::vector<std::vector<cv::Point>> Detector::detect(std::string filename) const{
+cv::Mat Detector::detect(std::string filename) const{
     cv::Mat img = cv::imread(cv::samples::findFile(filename));
-
+    cv::Mat out_img = img.clone();
         if(img.empty())
         throw std::invalid_argument("Could not read the image.");
 
@@ -47,7 +45,14 @@ std::vector<std::vector<cv::Point>> Detector::detect(std::string filename) const
     get_edge_map(img);
     std::vector<std::vector<cv::Point>> contours = get_contours(img);
 
-    // cv::Rect rect = cv::boundingRect(contours[0]);
+    for (auto contour: contours){
+            std::vector<cv::Point> approx;
+            cv::approxPolyDP(contour, approx, 0.04 * cv::arcLength(contour, true), true);
+            if (cv::contourArea(approx) > 300){
+                cv::Rect rect = cv::boundingRect(approx);
+                cv::rectangle(out_img, rect, cv::Scalar(255, 0, 0), 3);
+            }
+        }
 
-    return contours;
+    return out_img;    
 }
