@@ -1,4 +1,4 @@
-#include "blur.h"
+#include "image_processing.h"
 
 
 void blur(const cv::Mat& src, cv::Mat& dst, cv::Size ksize){

@@ -1,4 +1,4 @@
-#include "otsu_threshold.h"
+#include "image_processing.h"
 
 
 int otsu_method(const cv::Mat& img){

@@ -1,5 +1,4 @@
-#include "threshold.h"
-#include "otsu_threshold.h"
+#include "image_processing.h"
 
 void threshold(const cv::Mat& img, cv::Mat& dst, int threshold, int max_value, int threshold_type, int otsu_flag){
     if (threshold_type > 1 || threshold_type < 0)

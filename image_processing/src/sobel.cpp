@@ -1,4 +1,4 @@
-#include "sobel.h"
+#include "image_processing.h"
 
 void create_sobel_kernel(cv::Mat& kernel_x, cv::Mat& kernel_y){
     kernel_x = (cv::Mat_<float>(3, 3) <<
@@ -12,7 +12,7 @@ void create_sobel_kernel(cv::Mat& kernel_x, cv::Mat& kernel_y){
                 1,  2,  1);        
 }
 
-double compute_filter(const cv::Mat& src, cv::Mat kernel, int x, int y){
+double compute_filter(const cv::Mat& src, const cv::Mat& kernel, int x, int y){
     float value = 0;
     for (int i = -(kernel.rows-1)/2; i <= (kernel.rows-1)/2; ++i){
         for (int j = -(kernel.cols-1)/2; j <= (kernel.cols-1)/2; ++j){
@@ -22,7 +22,6 @@ double compute_filter(const cv::Mat& src, cv::Mat kernel, int x, int y){
 
     return value;
 }
-
 
 void sobel(const cv::Mat& src, cv::Mat& dst){
     if (src.channels() == 3)

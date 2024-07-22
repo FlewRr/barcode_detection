@@ -1,7 +1,5 @@
-#include "hough.h"
+#include "image_processing.h"
 #include "aux.h"
-#include <vector>
-#include <cmath>
 
 #define BIN_WIDTH 1
 #define NUM_BINS 180 / BIN_WIDTH

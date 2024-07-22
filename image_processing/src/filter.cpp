@@ -1,4 +1,4 @@
-#include "filter.h"
+#include "image_processing.h"
 
 
 void filter(const cv::Mat& src, cv::Mat& dst, cv::Mat kernel){
