@@ -3,10 +3,7 @@
 #include <cmath>
 #include <numeric>
 #include <cmath>
-#include "otsu.h"
-#include "img_fltr.h"
-#include "gradient.h"
-#include "hough_transform.h"
+#include "image_processing.h"
 #include "detection.h"
 
 #include <filesystem>

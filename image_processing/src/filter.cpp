@@ -1,7 +1,7 @@
 #include "filter.h"
 
 
-cv::Mat filter(cv::Mat src, cv::Mat kernel){
+void filter(const cv::Mat& src, cv::Mat& dst, cv::Mat kernel){
     if (src.channels() != 3){
         throw std::invalid_argument("Number of channels different from 3 are not supported.");
     }
@@ -15,7 +15,7 @@ cv::Mat filter(cv::Mat src, cv::Mat kernel){
         }
     }
 
-    cv::Mat dst(src.rows, src.cols, CV_64FC3, CV_RGB(0, 0, 0));
+    dst = cv::Mat(src.rows, src.cols, CV_64FC3, CV_RGB(0, 0, 0));
 
     for (int x = (kernel.rows-1)/2; x < src.rows - ((kernel.rows - 1)/ 2); ++x){
         for (int y = (kernel.cols-1)/2; y < src.cols - ((kernel.cols - 1)/2); ++y){
@@ -40,6 +40,4 @@ cv::Mat filter(cv::Mat src, cv::Mat kernel){
     }
 
     dst.convertTo(dst, CV_8UC3);
-
-    return dst;
 }

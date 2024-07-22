@@ -5,6 +5,6 @@
 #include <iostream>
 #include <cmath>
 
-int otsu_method(cv::Mat img);
+int otsu_method(const cv::Mat& img);
 
 #endif

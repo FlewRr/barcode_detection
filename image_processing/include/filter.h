@@ -3,6 +3,6 @@
 
 #include <opencv2/opencv.hpp>
 
-cv::Mat filter(cv::Mat src, cv::Mat kernel);
+void filter(const cv::Mat& src, cv::Mat& dst, cv::Mat kernel);
 
 #endif

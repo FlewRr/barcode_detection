@@ -1,7 +1,7 @@
 #include "otsu_threshold.h"
 
 
-int otsu_method(cv::Mat img){
+int otsu_method(const cv::Mat& img){
     double histogram[256];
     int total_pixels = img.total();
 

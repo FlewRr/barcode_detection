@@ -3,6 +3,6 @@
 
 #include "filter.h"
 
-void blur(cv::Mat src, cv::Mat& dst, cv::Size ksize);
+void blur(const cv::Mat& src, cv::Mat& dst, cv::Size ksize);
 
 #endif
