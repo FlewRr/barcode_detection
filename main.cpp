@@ -23,7 +23,7 @@ int main(int argc, char* argv[]){
     for (const auto & entry : std::filesystem::directory_iterator(path))
         files.push_back(entry.path());   
 
-    for (int i = 0; i < 5; ++i){
+    for (int i = 0; i < 100; ++i){
         std::string name = argv[2] + std::string("/") + std::to_string(i) + ".jpg";
         Detector detector;
         cv::Mat A = detector.detect(files[i]);
