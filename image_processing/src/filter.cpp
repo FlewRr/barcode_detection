@@ -1,7 +1,7 @@
 #include "image_processing.h"
 
 
-void filter(const cv::Mat& src, cv::Mat& dst, cv::Mat kernel){
+void filter(cv::Mat src, cv::Mat& dst, cv::Mat kernel){
     if (src.channels() != 3){
         throw std::invalid_argument("Number of channels different from 3 are not supported.");
     }

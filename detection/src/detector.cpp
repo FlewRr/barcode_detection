@@ -1,31 +1,64 @@
 #include "detector.h"
 
+ double median( cv::Mat channel ){
+    double m = (channel.rows*channel.cols) / 2;
+    int bin = 0;
+    double med = -1.0;
+
+    int histSize = 256;
+    float range[] = { 0, 256 };
+    const float* histRange = { range };
+    bool uniform = true;
+    bool accumulate = false;
+    cv::Mat hist;
+    cv::calcHist( &channel, 1, 0, cv::Mat(), hist, 1, &histSize, &histRange, uniform, accumulate );
+
+    for ( int i = 0; i < histSize && med < 0.0; ++i )
+    {
+        bin += cvRound( hist.at< float >( i ) );
+        if ( bin > m && med < 0.0 )
+            med = i;
+    }
+
+    return med;
+}
+
+
 void Detector::preprocess(cv::Mat& img) const noexcept{ 
-    blur(img, img, cv::Size(7, 7));
-    if (img.channels() == 3)
+    // blur(img, img, cv::Size(5, 5));
+    if (img.channels() != 1)
         cvtColor(img, img, cv::COLOR_BGR2GRAY);
+
+    cv::Mat out_img = img.clone();
+    cv::bilateralFilter(out_img, img, 13, 75, 75);
 }
 
 void Detector::get_edge_map(cv::Mat& img) const{
     int thr = cv::threshold(img, img, 0, 255, cv::THRESH_BINARY + cv::THRESH_OTSU);
+
     cv::Canny(img, img, thr/2, thr, 5);
 
     int element_size = int(std::sqrt(img.cols * img.rows) * 0.02);
     cv::Mat element = cv::getStructuringElement( 
         cv::MORPH_RECT, 
         cv::Size(element_size/2, element_size/2)); 
-    dilate(img, img, element);
+    cv::morphologyEx(img, img, cv::MORPH_CLOSE, element);
 
-    cv::Mat morph_element = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5, 5));
-    cv::morphologyEx(img, img, cv::MORPH_GRADIENT, morph_element);
+    cv::Mat oelement = cv::getStructuringElement( 
+    cv::MORPH_RECT, 
+    cv::Size(5, 5)); 
+    cv::morphologyEx(img, img, cv::MORPH_GRADIENT, oelement);
+    // dilate(img, img, cv::Mat(), cv::Point(-1, -1), 4);
+    // erode(img, img, cv::Mat(), cv::Point(-1, -1), 4);
+
 
 }
 
 std::vector<std::vector<cv::Point>> Detector::get_contours(cv::Mat img) const{
         std::vector<std::vector<cv::Point>> contours;
-        std::vector<cv::Vec4i> hierachy;
+        std::vector<cv::Vec4i> hierarchy;
 
-        cv::findContours(img , contours , hierachy , cv::RETR_EXTERNAL , cv::CHAIN_APPROX_SIMPLE);
+        cv::findContours(img , contours , hierarchy , cv::RETR_EXTERNAL , cv::CHAIN_APPROX_SIMPLE);
         std::sort(contours.begin(), contours.end(), [](std::vector<cv::Point> const & c1, std::vector<cv::Point> const & c2){
                     return cv::contourArea(c1) > cv::contourArea(c2);
         });
@@ -34,7 +67,7 @@ std::vector<std::vector<cv::Point>> Detector::get_contours(cv::Mat img) const{
 
 }
 
-cv::Mat Detector::detect(const std::string filename) const{
+std::vector<cv::Rect> Detector::detect(const std::string filename) const{
     cv::Mat img = cv::imread(cv::samples::findFile(filename));
     cv::Mat out_img = img.clone();
         if(img.empty())
@@ -42,14 +75,28 @@ cv::Mat Detector::detect(const std::string filename) const{
 
     preprocess(img);
     get_edge_map(img);
-    cv::imwrite("/home/rafiz/Desktop/barcode_detection/barcode_detection/processed_images/edge_map.jpg", img);
+    // cv::imwrite("/home/rafiz/Desktop/barcode_detection/barcode_detection/processed_images/edge_map.jpg", img);
     std::vector<std::vector<cv::Point>> contours = get_contours(img);
-
+    std::vector<cv::Rect> predictions;
     for (auto contour: contours){
             std::vector<cv::Point> approx;
             cv::approxPolyDP(contour, approx, 0.04 * cv::arcLength(contour, true), true);
-            cv::Rect rect = cv::boundingRect(contour);
-            cv::rectangle(out_img, rect, cv::Scalar(0, 0, 255), 3);
+            if (approx.size() == 4 && cv::isContourConvex(approx)){
+                cv::Rect rect = cv::boundingRect(contour);
+                double rect_area = rect.width * rect.height, img_area = img.cols * img.rows;
+            if (rect_area / img_area > 0.0005){
+                double ratio = (double)rect.width / rect.height;
+                double inv_ratio = 1/ratio;
+                if ((ratio < 4 || inv_ratio < 4) && (ratio > 1.5 || inv_ratio > 1.5)){
+                    predictions.push_back(rect);
+                    // cv::rectangle(out_img, rect, cv::Scalar(0, 0, 255), 3);
+                }
+                if (ratio < 1.1 && inv_ratio < 1.1 && ratio > 0.9 && inv_ratio > 0.9){
+                    predictions.push_back(rect);
+                    // cv::rectangle(out_img, rect, cv::Scalar(255, 0, 0), 3);
+                }
+            }
+            }
                 // cv::Rect rect = cv::boundingRect(approx);
                 // double ratio = (double)rect.width / rect.height;
                 // double inv_ratio = 1/ratio;
@@ -96,5 +143,7 @@ cv::Mat Detector::detect(const std::string filename) const{
             // }
         }
 
-    return out_img;    
+    return predictions;
+    // return out_img;    
+    // return img;
 }

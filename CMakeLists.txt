@@ -7,6 +7,7 @@ include_directories(${OpenCV_INCLUDE_DIRS} )
 
 add_subdirectory(image_processing)
 add_subdirectory(detection)
+add_subdirectory(pugixml)
 
 add_executable(main main.cpp)
-target_link_libraries(main ${OpenCV_LIBS} image_processing detection)
+target_link_libraries(main ${OpenCV_LIBS} image_processing detection pugixml)

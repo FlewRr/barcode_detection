@@ -4,7 +4,7 @@
 #include <numeric>
 #include <vector>
 
-void filter(const cv::Mat& src, cv::Mat& dst, cv::Mat kernel);
+void filter(cv::Mat src, cv::Mat& dst, cv::Mat kernel);
 
 void blur(const cv::Mat& src, cv::Mat& dst, cv::Size ksize);
 
