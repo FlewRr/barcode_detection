@@ -10,4 +10,4 @@ add_subdirectory(detection)
 add_subdirectory(pugixml)
 
 add_executable(main main.cpp)
-target_link_libraries(main ${OpenCV_LIBS} image_processing detection pugixml)
+target_link_libraries(main ${OpenCV_LIBS} image_processing detection)

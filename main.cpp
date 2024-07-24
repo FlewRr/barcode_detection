@@ -9,78 +9,12 @@
 
 #include "image_processing.h"
 #include "detection.h"
-#include "pugixml.hpp"
 
 
-// struct xml_string_writer: pugi::xml_writer{
-//     std::string result;
-
-//     virtual void write(const void* data, size_t size)
-//     {
-//         result.push_back(static_cast<const char*>(data));
-//     }
-// };
-
-std::vector<cv::Rect> get_markup(const char* filename){
-    pugi::xml_document doc;
-    pugi::xml_parse_result result = doc.load_file(filename);
-    std::vector<cv::Rect> rects;
-    for (pugi::xml_node x = doc.child("Result").child("Pages").child("Page").child("Barcodes").child("Barcode"); x; x = x.next_sibling("Barcode")){
-        std::vector<cv::Point> points;
-        for (pugi::xml_node point = x.child("Polygon").child("Points").child("Point"); point; point = point.next_sibling("Point")){\
-            points.push_back(cv::Point(point.attribute("X").as_int(), point.attribute("Y").as_int()));
-            // std::cout << point.attribute("X").value() << " " << point.attribute("Y").value() << "\n";
-        }
-        rects.push_back(cv::boundingRect(points));
-        }
- 
-    return rects;
-}
-
-double iou(const cv::Rect& rec1, const cv::Rect& rec2){
-    cv::Rect intersection = rec1 & rec2;
-    double intersection_area = intersection.area();
-    double union_area = rec1.area() + rec2.area() - intersection.area();
-    
-    if (union_area == 0)
-        return 0;
-
-    return intersection_area / union_area;
-}
-
-std::tuple<double, double> count_metrics(const std::vector<cv::Rect>& predictions, const std::vector<cv::Rect>& ground_truth){
-    if (predictions.size() == 0)
-        return std::tuple<double, double>(0, ground_truth.size());
-
-    int TP = 0, FN = 0;
-    std::vector<bool> flags(predictions.size(), false);
-    std::vector<double> values(predictions.size(), 0);
-    bool found = false;
-    for (int i = 0; i < ground_truth.size(); ++i){
-        for (int j = 0; j < predictions.size(); ++j){
-            values[j] = iou(predictions[j], ground_truth[i]);
-            if (flags[j]){
-                values[j] = -1;
-            }
-        }
-
-        int max_ind = std::distance(values.begin(), std::max_element(values.begin(), values.end()));
-        // std::cout << *std::max_element(values.begin(), values.end()) << "\n" << max_ind;
-        if (values[max_ind] > 0.5){
-            flags[max_ind] = true;
-            TP += 1;
-        }
-        else{
-            FN += 1;
-        }
-    }
-
-    return std::tuple<double, double>(TP, FN);
-}
 int main(int argc, char* argv[]){
     std::vector<std::string> files; 
     std::vector<std::string> markup_files; 
-    double tp = 0, fn = 0, recall = 0, working_time = 0;
+    double tp = 0, fp = 0, fn = 0, recall = 0, precision = 0, working_time = 0;
 
 
     if (argc <= 2){
@@ -101,24 +35,88 @@ int main(int argc, char* argv[]){
 
     auto t_start = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < files.size(); ++i){
-        // std::string name = argv[2] + std::string("/") + std::to_string(i) + ".jpg";
+        // std::string name = "/home/rafiz/Desktop/barcode_detection/barcode_detection/processed_images/"  + std::to_string(i) + ".jpg";
+        // cv::Mat output = cv::imread(cv::samples::findFile(files[i]));
         Detector detector;
-        auto work_start = std::chrono::high_resolution_clock::now();
+        // auto work_start = std::chrono::high_resolution_clock::now();
         std::vector<cv::Rect> preds = detector.detect(files[i]);
-        auto work_end = std::chrono::high_resolution_clock::now();
-        working_time += std::chrono::duration<double, std::milli>(work_end-work_start).count() * 0.001;
+        // auto work_end = std::chrono::high_resolution_clock::now();
+        // working_time += std::chrono::duration<double, std::milli>(work_end-work_start).count() * 0.001;
 
         std::vector<cv::Rect> ground_truth = get_markup(&markup_files[i][0]);
 
-        // std::cout << files[i] << " " << markup_files[i] << "\n";
-        std::tuple<double, double> results = count_metrics(preds, ground_truth);
+        std::tuple<double, double, double> results = count_metrics(preds, ground_truth);
         tp += std::get<0>(results);
-        fn += std::get<1>(results);
-    }   
-    auto t_end = std::chrono::high_resolution_clock::now();
-    recall = tp/(tp+fn);
+        fp += std::get<1>(results);
+        fn += std::get<2>(results);
 
-    std::cout << "TP: " << tp << "\n" << "FN: " << fn << "\n" << 
-    "Recall: " << recall << "\n" ;
-    // << "Time elapsed: " << std::chrono::duration<double, std::milli>(t_end-t_start).count() * 0.001 << "\n" << "Average time for single image: "<< working_time / files.size() << "\n";
+        // for (const cv::Rect& rect: preds){
+        //     cv::rectangle(output, rect, cv::Scalar(0, 0, 255), 3);
+        // }
+
+        // for (const cv::Rect& rect: ground_truth){
+        //     cv::rectangle(output, rect, cv::Scalar(255, 0, 0), 3);
+        // }
+
+        // cv::imwrite(name, output);
+    }   
+    // auto t_end = std::chrono::high_resolution_clock::now();
+    recall = tp/(tp+fn);
+    precision = tp/(tp+fp);
+    std::cout << "TP: " << tp << "\n" << "FP: " << fp << "\n" << "FN: " << fn << "\n" << "Precision: " << precision << "\n" << 
+    "Recall: " << recall << "\n";
+    // << "Time elapsed: " << std::chrono::duration<double, std::milli>(t_end-t_start).count() * 0.001 << "\n" << "Average time for single image: "<< working_time / 218 << "\n";
 }
+
+
+
+// int main(){
+//     int kernel_rows = 3, kernel_cols = 3;
+//     cv::Mat img = cv::imread(cv::samples::findFile("/home/rafiz/Desktop/barcode_detection/barcode_detection/Image/[P]ISBN_18_0001.jpg"));
+
+//     cv::Mat img_conv(src.rows + kernel_rows - 1, src.cols + kernel_cols - 1, CV_64FC3, CV_RGB(0, 0, 0));
+//     for (int i = 0; i < src.rows; i++) {
+//         for (int j = 0; j < src.cols; j++) {
+//                 img_conv.at<cv::Vec3d>(i+1, j+1)[0] = src.at<cv::Vec3d>(i, j)[0];
+//                 img_conv.at<cv::Vec3d>(i+1, j+1)[1] = src.at<cv::Vec3d>(i, j)[1];
+//                 img_conv.at<cv::Vec3d>(i+1, j+1)[2] = src.at<cv::Vec3d>(i ,j)[2];
+//         }
+//     }
+
+
+//     cv::Mat preff = cv::Mat(img_conv.rows, img_conv.cols, CV_64FC3, CV_RGB(0, 0, 0)); 
+
+//     for (int i = 1; i < img_conv.rows; i++){
+//         for (int k = 0; k < 3; ++k){
+//             preff.at<cv::Vec3d>(i, 0)[k] = preff.at<cv::Vec3d>(i-1, 0)[k] + img_conv.at<cv::Vec3d>(i, 0)[k];
+//         }
+//     }
+
+    
+//     for (int i = 1; i < img_conv.cols; i++){
+//         for (int k = 0; k < 3; ++k){
+//             preff.at<cv::Vec3d>(0, i)[k] = preff.at<cv::Vec3d>(0, i-1)[k] + img_conv.at<cv::Vec3d>(0, i)[k];
+//         }
+//     }
+
+//     for (int i = 1; i < img_conv.rows; ++i){
+//         for (int j = 1; j < img_conv.cols; ++j){
+//             for (int k = 0; k < 3; ++k){
+//                 preff.at<cv::Vec3d>(i, j)[k] = preff.at<cv::Vec3d>(i-1, j) + preff.at<cv::Vec3d>(i, j-1) + preff.at<cv::Vec3d>(i-1, j-1) + img_conv.at<cv::Vec3d>(i, j);
+//             }
+//         }
+//     }
+
+
+//     for (int x = (kernel_rows-1)/2; x < img.rows - ((kernel_rows - 1)/2); ++x){
+//         for (int y = (kernel_cols-1)/2; y < img.cols - ((kernel_cols -1)/2; ++y)){
+//             for (int k = 0; k < 3; ++k){
+//                 img.at<cv::Vec3d>(x-((kernel_rows-1)/2), y-((kernel_cols-1)/2))[k] = preff.at<cv::Vec3d>(x, y) + preff.at<cv::Vec3d>(x-((kernel_rows-1)/2), y-((kernel_cols-1)/2)) - preff.at<cv:Vec3d>(x,)
+//             }
+//         }
+//     }
+
+
+
+//     std::cout << preff_mx[2][3] + preff_mx[0][0] - preff_mx[2][0];
+// }
