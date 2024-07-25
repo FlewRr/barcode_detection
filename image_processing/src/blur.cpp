@@ -1,6 +1,7 @@
 #include "image_processing.h"
 
 void integral_image(const cv::Mat& src, cv::Mat& dst){
+    dst = cv::Mat(src.rows, src.cols, CV_64FC3);
     for (int y = 1; y < dst.rows; ++y){
         for (int c = 0; c < 3; ++c){
             dst.at<cv::Vec3d>(y, 0)[c] = dst.at<cv::Vec3d>(y-1, 0)[c] + src.at<cv::Vec3d>(y, 0)[c];
@@ -8,7 +9,7 @@ void integral_image(const cv::Mat& src, cv::Mat& dst){
     }
     for (int x = 1; x < dst.cols; ++x){
         for (int c = 0; c < 3; ++c){
-        dst.at<cv::Vec3d>(0, x)[c] = dst.at<cv::Vec3d>(0, x-1)[c] + src.at<cv::Vec3d>(0, x)[c];
+            dst.at<cv::Vec3d>(0, x)[c] = dst.at<cv::Vec3d>(0, x-1)[c] + src.at<cv::Vec3d>(0, x)[c];
         }
     }
     for (int y = 1; y < dst.rows; ++y){
@@ -18,6 +19,8 @@ void integral_image(const cv::Mat& src, cv::Mat& dst){
             }
         }
     }
+
+    dst.convertTo(dst, CV_32SC3);
 }
 
 void blur(const cv::Mat& src, cv::Mat& dst, int ksize){
