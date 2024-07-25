@@ -6,7 +6,9 @@
 
 void filter(cv::Mat src, cv::Mat& dst, cv::Mat kernel);
 
-void blur(const cv::Mat& src, cv::Mat& dst, cv::Size ksize);
+void blur(const cv::Mat& src, cv::Mat& dst, int ksize);
+
+void integral_image(const cv::Mat& src, cv::Mat& dst);
 
 int otsu_method(const cv::Mat& img);
 
